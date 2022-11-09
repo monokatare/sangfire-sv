@@ -1,11 +1,16 @@
 import pygame
 import random
 import time
+
+file = "survival" #이미지 파일이름
 SCREEN_WIDTH = 1280//2
 SCREEN_HEIGHT = 960//2 # 스크린의 가로, 세로
 backcolor=(255,255,255)
 hpcolor = (255, 0, 0) # 색깔 RGB
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) #화면 설정
+back_img=(pygame.transform.scale(pygame.image.load(file + '/back.png'), (10000, 10000)))
+cam_x=0
+cam_y=0
 clock=pygame.time.Clock() # 게임 내 시간 변수
 flag=True
 mobs=[] # 몬스터 객체 리스트
@@ -45,57 +50,63 @@ class weapon:
             self.start_time=game_time # 무기 생성 시간 갱신
             self.move_check()
     def draw(self):
-        screen.blit(self.img,self.loc)
+        screen.blit(self.img,(self.loc.x-cam_x,self.loc.y-cam_y))
 
 class boom(weapon):
     def __init__(self):
         self.size=40
-        self.Time=2
+        self.Time=1
         self.str=10
         self.throw=3
         self.speed=10
         self.dx=1 # x 벡터 방향
         self.dy=1 # y 벡터 방향
-        self.img = pygame.image.load("C:/Users/ASUS/PycharmProjects/pygame/게임 이미지/boom.png")
+        self.img = pygame.image.load(file+"/boom.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
 
 class player:
     def __init__(self):
         #초기 설정값
-        self.size=30
+        self.size=50
         self.hp_size=50
         self.hp=100
         self.str = 10
-        self.speed = 5
+        self.speed = 10
         self.level=0
         self.exp=0
-        self.img = pygame.image.load('C:/Users/ASUS/PycharmProjects/pygame/게임 이미지/hero.png')
-        self.hp_img = pygame.image.load('C:/Users/ASUS/PycharmProjects/pygame/게임 이미지/hp.png')
+        self.img = pygame.image.load(file+"/hero.png")
+        self.hp_img = pygame.image.load(file+"/hp.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size,10))
         self.loc.x=200
         self.loc.y=300
     def move(self):
+        global cam_x
+        global cam_y
         #움직이는 함수
         key_event = pygame.key.get_pressed()
         if key_event[pygame.K_LEFT]:
             self.loc.x -= self.speed
+            cam_x-=self.speed
         if key_event[pygame.K_RIGHT]:
             self.loc.x += self.speed
+            cam_x+=self.speed
         if key_event[pygame.K_UP]:
             self.loc.y -= self.speed
+            cam_y-=self.speed
         if key_event[pygame.K_DOWN]:
             self.loc.y += self.speed
+            cam_y+=self.speed
     def draw(self):
         #그리는 함수
         self.hp_size=self.hp//2
         if self.hp_size<=0:
             self.hp_size=0
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size, 10))
-        screen.blit(self.img, (self.loc.x, self.loc.y))
-        screen.blit(self.hp_img, (self.loc.x-10, self.loc.y - 20))
+        screen.blit(self.img, (self.loc.x-cam_x,self.loc.y-cam_y))
+        screen.blit(self.hp_img, (self.loc.x-10-cam_x, self.loc.y - 20-cam_y))
     def death_check(self,x,y,str,size):
         #몬스터와 충돌하였는지 판별, x,y,srt,size= 몬스터의 값
         if (abs(self.loc.x - x) <= size and abs(self.loc.y - y) <= size):
@@ -120,7 +131,7 @@ class monster:
         self.loc.x = random.choice(spawnlistx)
         self.loc.y = random.choice(spawnlisty)
     def draw(self):
-        screen.blit(self.img, self.loc)
+        screen.blit(self.img, (self.loc.x-cam_x,self.loc.y-cam_y))
     def move(self,x,y):
         #몬스터가 플레이어에게 이동하게 하는 함수
         if x>=self.loc.x:
@@ -152,10 +163,10 @@ class zombie(monster):
         self.size=30
         self.hp=100
         self.str=20
-        self.speed=5
+        self.speed=10
         self.dx=1
         self.dy=1
-        self.img = pygame.image.load('C:/Users/ASUS/PycharmProjects/pygame/게임 이미지/zom.png')
+        self.img = pygame.image.load(file+'/zom.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
 class slenderman(monster):
@@ -166,7 +177,7 @@ class slenderman(monster):
         self.speed=1
         self.dx=1
         self.dy=1
-        self.img = pygame.image.load('C:/Users/ASUS/PycharmProjects/pygame/게임 이미지/enderman.png')
+        self.img = pygame.image.load(file+'/enderman.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
     def move(self,x,y):
@@ -179,22 +190,28 @@ class slenderman(monster):
             self.loc.y += 10 * (self.dy)
 
 def Rungame():
+    Flag2=True
+    global cam_x
+    global cam_y
     global flag
     # 게임 시작 시간
     game_time = int(time.time())
     # 좀비 1 객체 생성
-    zom1=zombie()
+    for i in range(100):
+        zom1=zombie()
+        mobs.append(zom1)
     # 몬스터 리스트에 넣어주기
-    mobs.append(zom1)
     slen1=slenderman()
     mobs.append(slen1)
     p1 = player()
     for i in range(10):
+        k=10
+        k+=i
         # 폭탄 10개 생성
-        boom1=boom()
-        boom1.loc.x=p1.loc.x
-        boom1.loc.y=p1.loc.y
-        weapons.append(boom1)
+        #boom1=boom()
+        #boom1.loc.x=p1.loc.x
+        #boom1.loc.y=p1.loc.y
+        #weapons.append(boom1)
     for monsters in mobs:
         #몬스터들 스폰 위치 지정
         monsters.start()
@@ -206,6 +223,7 @@ def Rungame():
         remain_time= int(time.time())-game_time
         clock.tick(60)
         screen.fill(backcolor)
+        screen.blit(back_img,(-5000-cam_x,-5000-cam_y))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flag = False
