@@ -1,10 +1,9 @@
 import pygame
 import random
 import time
-
 file = "survival" #이미지 파일이름
-SCREEN_WIDTH = 1280//2
-SCREEN_HEIGHT = 960//2 # 스크린의 가로, 세로
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480 # 스크린의 가로, 세로
 backcolor=(255,255,255)
 hpcolor = (255, 0, 0) # 색깔 RGB
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) #화면 설정
@@ -72,7 +71,7 @@ class player:
         self.hp_size=50
         self.hp=100
         self.str = 10
-        self.speed = 10
+        self.speed = 5
         self.level=0
         self.exp=0
         self.img = pygame.image.load(file+"/hero.png")
@@ -80,8 +79,8 @@ class player:
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size,10))
-        self.loc.x=200
-        self.loc.y=300
+        self.loc.x=320
+        self.loc.y=240
     def move(self):
         global cam_x
         global cam_y
@@ -126,8 +125,8 @@ class monster:
         self.loc= "해당 몬스터 위치"
     def start(self):
         # 몬스터 스폰 위치 지정
-        spawnlistx=list(range(-2*SCREEN_WIDTH,-SCREEN_WIDTH))+list(range(SCREEN_WIDTH,2*SCREEN_WIDTH))
-        spawnlisty=list(range(-2*SCREEN_HEIGHT,-SCREEN_HEIGHT))+list(range(SCREEN_HEIGHT,2*SCREEN_HEIGHT))
+        spawnlistx=list(range(-4500,-SCREEN_WIDTH))+list(range(SCREEN_WIDTH,4500))
+        spawnlisty=list(range(-4500,-SCREEN_HEIGHT))+list(range(SCREEN_HEIGHT,4500))
         self.loc.x = random.choice(spawnlistx)
         self.loc.y = random.choice(spawnlisty)
     def draw(self):
@@ -197,7 +196,7 @@ def Rungame():
     # 게임 시작 시간
     game_time = int(time.time())
     # 좀비 1 객체 생성
-    for i in range(100):
+    for i in range(1000):
         zom1=zombie()
         mobs.append(zom1)
     # 몬스터 리스트에 넣어주기
@@ -208,10 +207,10 @@ def Rungame():
         k=10
         k+=i
         # 폭탄 10개 생성
-        #boom1=boom()
-        #boom1.loc.x=p1.loc.x
-        #boom1.loc.y=p1.loc.y
-        #weapons.append(boom1)
+        boom1=boom()
+        boom1.loc.x=p1.loc.x
+        boom1.loc.y=p1.loc.y
+        weapons.append(boom1)
     for monsters in mobs:
         #몬스터들 스폰 위치 지정
         monsters.start()
@@ -220,6 +219,7 @@ def Rungame():
         weapon.start(int(time.time())-game_time)
     while flag:
         # 현재 시간
+        print(p1.loc.x,p1.loc.y)
         remain_time= int(time.time())-game_time
         clock.tick(60)
         screen.fill(backcolor)
