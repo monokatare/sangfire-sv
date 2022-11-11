@@ -12,6 +12,7 @@ cam_x=0
 cam_y=0
 clock=pygame.time.Clock() # 게임 내 시간 변수
 flag=True
+pflag=True
 mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
 class weapon:
@@ -187,46 +188,40 @@ class slenderman(monster):
         if epoint == 0:
             self.loc.x += 10 * (self.dx)
             self.loc.y += 10 * (self.dy)
-
 def Rungame():
-    Flag2=True
     global cam_x
     global cam_y
     global flag
+    global pflag
+    global mobs
+    global weapons
     # 게임 시작 시간
     game_time = int(time.time())
-    # 좀비 1 객체 생성
-    for i in range(1000):
-        zom1=zombie()
-        mobs.append(zom1)
-    # 몬스터 리스트에 넣어주기
-    slen1=slenderman()
-    mobs.append(slen1)
-    p1 = player()
-    for i in range(10):
-        k=10
-        k+=i
-        # 폭탄 10개 생성
-        boom1=boom()
-        boom1.loc.x=p1.loc.x
-        boom1.loc.y=p1.loc.y
-        weapons.append(boom1)
-    for monsters in mobs:
-        #몬스터들 스폰 위치 지정
-        monsters.start()
-    for weapon in weapons:
-        #무기 위치 지정 및 무기 생성 시간 기록
-        weapon.start(int(time.time())-game_time)
+    p1=player()
     while flag:
-        # 현재 시간
-        print(p1.loc.x,p1.loc.y)
         remain_time= int(time.time())-game_time
         clock.tick(60)
         screen.fill(backcolor)
         screen.blit(back_img,(-5000-cam_x,-5000-cam_y))
+        if len(mobs)<1000:
+            zom=zombie()
+            slen=slenderman()
+            zom.start()
+            slen.start()
+            mobs.append(zom)
+            mobs.append(slen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flag = False
+        reset_key=pygame.key.get_pressed()
+        # ESC 누르면 게임초기화
+        if reset_key[pygame.K_ESCAPE]:
+            game_time = int(time.time())
+            mobs=[]
+            weapons=[]
+            p1=player()
+            cam_x=0
+            cam_y=0
         p1.move()
         # 플레이어 좌표값
         player_x=p1.loc.x
