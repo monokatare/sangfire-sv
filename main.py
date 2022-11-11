@@ -13,8 +13,11 @@ cam_y=0
 clock=pygame.time.Clock() # 게임 내 시간 변수
 flag=True
 pflag=True
+wflag=True
 mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
+wlist=[] # 임시 무기 리스트
+exps=[] # 경험치 리스트
 class weapon:
     def __init__(self):
         self.size="무기 사이즈"
@@ -44,6 +47,7 @@ class weapon:
         self.loc.y+=self.dy*self.speed
     def time_check(self,game_time,x,y):
         # 만약 무기의 지속 시간이 다했다면 플레이어의 위치로 이동
+
         if game_time-self.start_time>=self.Time:
             self.loc.x=x
             self.loc.y=y
@@ -70,6 +74,10 @@ class player:
         #초기 설정값
         self.size=50
         self.hp_size=50
+        self.lv=1
+        self.exp_pt=2
+        self.exp_max=self.lv*1000
+        self.exp_size = (self.exp_pt) * (100 / self.exp_max)
         self.hp=100
         self.str = 10
         self.speed = 5
@@ -77,9 +85,11 @@ class player:
         self.exp=0
         self.img = pygame.image.load(file+"/hero.png")
         self.hp_img = pygame.image.load(file+"/hp.png")
+        self.exp_img= pygame.image.load(file+"/exp_bar.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size,10))
+        self.exp_img = pygame.transform.scale(self.exp_img, (self.exp_size * (6.5), 20))
         self.loc.x=320
         self.loc.y=240
     def move(self):
@@ -107,10 +117,20 @@ class player:
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size, 10))
         screen.blit(self.img, (self.loc.x-cam_x,self.loc.y-cam_y))
         screen.blit(self.hp_img, (self.loc.x-10-cam_x, self.loc.y - 20-cam_y))
+        screen.blit(self.exp_img, (self.loc.x - 320 - cam_x, self.loc.y - 240 - cam_y))
     def death_check(self,x,y,str,size):
         #몬스터와 충돌하였는지 판별, x,y,srt,size= 몬스터의 값
         if (abs(self.loc.x - x) <= size and abs(self.loc.y - y) <= size):
             self.hp-=str//10
+    def exp_check(self,expp):
+        self.exp_pt+=(expp/self.lv)
+        self.exp_max = 1000
+        if self.exp_max<=self.exp_pt:
+            self.lv+=1
+            self.exp_pt=2
+        self.exp_size = (self.exp_pt) * (100 / self.exp_max)
+        self.exp_img = pygame.transform.scale(self.exp_img, (self.exp_size * (6.5), 20))
+
 
 
 
@@ -188,6 +208,23 @@ class slenderman(monster):
         if epoint == 0:
             self.loc.x += 10 * (self.dx)
             self.loc.y += 10 * (self.dy)
+class exp:
+    def __init__(self,x,y):
+        self.size=20
+        self.img = pygame.image.load(file+'/exp.png')
+        self.img = pygame.transform.scale(self.img, (self.size, self.size))
+        self.loc= pygame.Rect(self.img.get_rect())
+        self.loc.x=x
+        self.loc.y=y
+        self.expp=100
+    def draw(self):
+        screen.blit(self.img, (self.loc.x - cam_x, self.loc.y - cam_y))
+    def death_check(self,x,y,size):
+        #몬스터와 충돌하였는지 판별, x,y,srt,size= 몬스터의 값
+        if (abs(self.loc.x - x) <= size and abs(self.loc.y - y) <= size):
+            exps.remove(self)
+            return -1
+        return 1
 def Rungame():
     global cam_x
     global cam_y
@@ -195,9 +232,17 @@ def Rungame():
     global pflag
     global mobs
     global weapons
+    global exps
+    global wflag
     # 게임 시작 시간
     game_time = int(time.time())
     p1=player()
+    for i in range(10):
+        boom1=boom()
+        boom1.loc.x=p1.loc.x
+        boom1.loc.y=p1.loc.y
+        boom1.start(int(time.time())-game_time)
+        weapons.append(boom1)
     while flag:
         remain_time= int(time.time())-game_time
         clock.tick(60)
@@ -210,6 +255,15 @@ def Rungame():
             slen.start()
             mobs.append(zom)
             mobs.append(slen)
+        if wflag==False:
+            for i in range(10):
+                boom1 = boom()
+                boom1.loc.x = p1.loc.x
+                boom1.loc.y = p1.loc.y
+                boom1.start(int(time.time()) - game_time)
+                weapons.append(boom1)
+            wflag=True
+            # 게임이 리셋되었을 때 임시방편 무기 소환 (수정 예정)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flag = False
@@ -219,9 +273,11 @@ def Rungame():
             game_time = int(time.time())
             mobs=[]
             weapons=[]
+            exps=[]
             p1=player()
             cam_x=0
             cam_y=0
+            wflag=False
         p1.move()
         # 플레이어 좌표값
         player_x=p1.loc.x
@@ -247,10 +303,16 @@ def Rungame():
                 weapon_size=weapon.size
                 #몬스터가 무기에 충돌했는지를 판정
                 if monsters.death_check(weapon_x,weapon_y,weapon_str,weapon_size)<0:
+                    exp1=exp(mob_x,mob_y)
+                    exps.append(exp1)
                     break
             # 플레이어가 몬스터와 충돌했는지를 판정
             p1.death_check(mob_x,mob_y,mob_str,mob_size)
             monsters.draw()
+        for expoint in exps:
+            if expoint.death_check(player_x,player_y,p1.size)<0:
+                p1.exp_check(expoint.expp)
+            expoint.draw()
         p1.draw()
         pygame.display.update()
 Rungame()
