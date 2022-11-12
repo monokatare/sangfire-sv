@@ -18,6 +18,16 @@ mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
 wlist=[] # 임시 무기 리스트
 exps=[] # 경험치 리스트
+def pause():
+    paused = True
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    paused =False
 class weapon:
     def __init__(self):
         self.size="무기 사이즈"
@@ -109,6 +119,8 @@ class player:
         if key_event[pygame.K_DOWN]:
             self.loc.y += self.speed
             cam_y+=self.speed
+        if key_event[pygame.K_p]:
+            pause()
     def draw(self):
         #그리는 함수
         self.hp_size=self.hp//2
