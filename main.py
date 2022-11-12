@@ -7,7 +7,7 @@ SCREEN_HEIGHT = 480 # 스크린의 가로, 세로
 backcolor=(255,255,255)
 hpcolor = (255, 0, 0) # 색깔 RGB
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) #화면 설정
-back_img=(pygame.transform.scale(pygame.image.load(file + '/back.png'), (10000, 10000)))
+back_img=(pygame.transform.scale(pygame.image.load(file + '/map.png'), (10000, 10000)))
 cam_x=0
 cam_y=0
 clock=pygame.time.Clock() # 게임 내 시간 변수
@@ -76,9 +76,22 @@ class boom(weapon):
         self.speed=10
         self.dx=1 # x 벡터 방향
         self.dy=1 # y 벡터 방향
-        self.img = pygame.image.load(file+"/boom2.png")
+        self.img = pygame.image.load(file+"/weapon_boom.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
+class eye(weapon):
+    def __init__(self):
+        self.size = 40
+        self.Time = 2
+        self.str = 50
+        self.throw = 3
+        self.speed = 10
+        self.dx = 1  # x 벡터 방향
+        self.dy = 0  # y 벡터 방향
+        self.img = pygame.image.load(file + "/weapon_eye.png")
+        self.loc = pygame.Rect(self.img.get_rect())
+        self.img = pygame.transform.scale(self.img, (self.size, self.size))
+
 
 class player:
     def __init__(self):
@@ -103,6 +116,8 @@ class player:
         self.exp_img = pygame.transform.scale(self.exp_img, (self.exp_size * (6.5), 20))
         self.loc.x=320
         self.loc.y=240
+        self.dx=1
+        self.dy=0
     def move(self):
         global cam_x
         global cam_y
@@ -111,15 +126,23 @@ class player:
         if key_event[pygame.K_LEFT]:
             self.loc.x -= self.speed
             cam_x-=self.speed
+            self.dx=-1
+            self.dx= 0
         if key_event[pygame.K_RIGHT]:
             self.loc.x += self.speed
             cam_x+=self.speed
+            self.dx=1
+            self.dy=0
         if key_event[pygame.K_UP]:
             self.loc.y -= self.speed
             cam_y-=self.speed
+            self.dx=0
+            self.dy=-1
         if key_event[pygame.K_DOWN]:
             self.loc.y += self.speed
             cam_y+=self.speed
+            self.dx=0
+            self.dy=1
         if key_event[pygame.K_p]:
             pause()
     def draw(self):
@@ -224,7 +247,7 @@ class slenderman(monster):
 class exp:
     def __init__(self,x,y):
         self.size=20
-        self.img = pygame.image.load(file+'/exp2.png')
+        self.img = pygame.image.load(file+'/exp.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
         self.loc.x=x
@@ -322,6 +345,7 @@ def Rungame():
             # 플레이어가 몬스터와 충돌했는지를 판정
             p1.death_check(mob_x,mob_y,mob_str,mob_size)
             monsters.draw()
+        #경험치
         for expoint in exps:
             if expoint.death_check(player_x,player_y,p1.size)<0:
                 p1.exp_check(expoint.expp)
