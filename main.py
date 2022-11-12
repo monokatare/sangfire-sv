@@ -42,7 +42,7 @@ class weapon:
         self.loc= "해당 무기 위치"
     def start(self,start_time):
         self.start_time=start_time #무기의 생성 시간
-    def move_check(self):
+    def move_check(self,dx,dy):
         # 무기의 방향 벡터를 랜덤으로 정해줌
         while True:
             list=[1,-1,0]
@@ -56,14 +56,13 @@ class weapon:
         #무기 이동
         self.loc.x+=self.dx*self.speed
         self.loc.y+=self.dy*self.speed
-    def time_check(self,game_time,x,y):
+    def time_check(self,game_time,x,y,dx,dy):
         # 만약 무기의 지속 시간이 다했다면 플레이어의 위치로 이동
-
         if game_time-self.start_time>=self.Time:
             self.loc.x=x
             self.loc.y=y
             self.start_time=game_time # 무기 생성 시간 갱신
-            self.move_check()
+            self.move_check(dx,dy)
     def draw(self):
         screen.blit(self.img,(self.loc.x-cam_x,self.loc.y-cam_y))
 
@@ -82,7 +81,7 @@ class boom(weapon):
 class eye(weapon):
     def __init__(self):
         self.size = 40
-        self.Time = 2
+        self.Time = 0.5
         self.str = 50
         self.throw = 3
         self.speed = 10
@@ -91,6 +90,11 @@ class eye(weapon):
         self.img = pygame.image.load(file + "/weapon_eye.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
+    def move_check(self,dx,dy):
+        print(dx,dy)
+        self.dx=dx
+        self.dy=dy
+
 
 
 class player:
@@ -104,7 +108,7 @@ class player:
         self.exp_size = (self.exp_pt) * (100 / self.exp_max)
         self.hp=100
         self.str = 10
-        self.speed = 5
+        self.speed = 3
         self.level=0
         self.exp=0
         self.img = pygame.image.load(file+"/hero.png")
@@ -127,7 +131,7 @@ class player:
             self.loc.x -= self.speed
             cam_x-=self.speed
             self.dx=-1
-            self.dx= 0
+            self.dy=0
         if key_event[pygame.K_RIGHT]:
             self.loc.x += self.speed
             cam_x+=self.speed
@@ -136,13 +140,13 @@ class player:
         if key_event[pygame.K_UP]:
             self.loc.y -= self.speed
             cam_y-=self.speed
-            self.dx=0
             self.dy=-1
+            self.dx=0
         if key_event[pygame.K_DOWN]:
             self.loc.y += self.speed
             cam_y+=self.speed
-            self.dx=0
             self.dy=1
+            self.dx=0
         if key_event[pygame.K_p]:
             pause()
     def draw(self):
@@ -166,9 +170,6 @@ class player:
             self.exp_pt=2
         self.exp_size = (self.exp_pt) * (100 / self.exp_max)
         self.exp_img = pygame.transform.scale(self.exp_img, (self.exp_size * (6.5), 20))
-
-
-
 
 class monster:
     def __init__(self):
@@ -277,8 +278,13 @@ def Rungame():
         boom1=boom()
         boom1.loc.x=p1.loc.x
         boom1.loc.y=p1.loc.y
+        eye1=eye()
+        eye1.loc.x=p1.loc.x
+        eye1.loc.y=p1.loc.y
         boom1.start(int(time.time())-game_time)
+        eye1.start(int(time.time())-game_time)
         weapons.append(boom1)
+        weapons.append(eye1)
     while flag:
         remain_time= int(time.time())-game_time
         clock.tick(60)
@@ -296,8 +302,13 @@ def Rungame():
                 boom1 = boom()
                 boom1.loc.x = p1.loc.x
                 boom1.loc.y = p1.loc.y
+                eye1 = eye()
+                eye1.loc.x = p1.loc.x
+                eye1.loc.y = p1.loc.y
                 boom1.start(int(time.time()) - game_time)
+                eye1.start(int(time.time()) - game_time)
                 weapons.append(boom1)
+                weapons.append(eye1)
             wflag=True
             # 게임이 리셋되었을 때 임시방편 무기 소환 (수정 예정)
         for event in pygame.event.get():
@@ -320,7 +331,7 @@ def Rungame():
         player_y=p1.loc.y
         for weapon in weapons:
             #무기 지속 시간 체크
-            weapon.time_check(remain_time,player_x,player_y)
+            weapon.time_check(remain_time,player_x,player_y,p1.dx,p1.dy)
             weapon.move()
             weapon.draw()
         for monsters in mobs:
