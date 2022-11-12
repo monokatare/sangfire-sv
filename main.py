@@ -18,6 +18,17 @@ mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
 wlist=[] # 임시 무기 리스트
 exps=[] # 경험치 리스트
+def pause():
+    paused = True
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_c:
+                    paused =False
+
 class weapon:
     def __init__(self):
         self.size="무기 사이즈"
@@ -65,14 +76,14 @@ class boom(weapon):
         self.speed=10
         self.dx=1 # x 벡터 방향
         self.dy=1 # y 벡터 방향
-        self.img = pygame.image.load(file+"/boom.png")
+        self.img = pygame.image.load(file+"/boom2.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
 
 class player:
     def __init__(self):
         #초기 설정값
-        self.size=50
+        self.size=40
         self.hp_size=50
         self.lv=1
         self.exp_pt=2
@@ -85,7 +96,7 @@ class player:
         self.exp=0
         self.img = pygame.image.load(file+"/hero.png")
         self.hp_img = pygame.image.load(file+"/hp.png")
-        self.exp_img= pygame.image.load(file+"/exp_bar.png")
+        self.exp_img= pygame.image.load(file+"/exp bar2.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size,10))
@@ -109,6 +120,8 @@ class player:
         if key_event[pygame.K_DOWN]:
             self.loc.y += self.speed
             cam_y+=self.speed
+        if key_event[pygame.K_p]:
+            pause()
     def draw(self):
         #그리는 함수
         self.hp_size=self.hp//2
@@ -180,13 +193,13 @@ class monster:
 
 class zombie(monster):
     def __init__(self):
-        self.size=30
+        self.size=50
         self.hp=100
         self.str=20
         self.speed=10
         self.dx=1
         self.dy=1
-        self.img = pygame.image.load(file+'/zom.png')
+        self.img = pygame.image.load(file+'/zom2.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
 class slenderman(monster):
@@ -197,7 +210,7 @@ class slenderman(monster):
         self.speed=1
         self.dx=1
         self.dy=1
-        self.img = pygame.image.load(file+'/enderman.png')
+        self.img = pygame.image.load(file+'/slen2.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
     def move(self,x,y):
@@ -211,7 +224,7 @@ class slenderman(monster):
 class exp:
     def __init__(self,x,y):
         self.size=20
-        self.img = pygame.image.load(file+'/exp.png')
+        self.img = pygame.image.load(file+'/exp2.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
         self.loc.x=x
@@ -248,7 +261,7 @@ def Rungame():
         clock.tick(60)
         screen.fill(backcolor)
         screen.blit(back_img,(-5000-cam_x,-5000-cam_y))
-        if len(mobs)<1000:
+        if len(mobs)<100:
             zom=zombie()
             slen=slenderman()
             zom.start()
