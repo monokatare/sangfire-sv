@@ -416,7 +416,7 @@ def Rungame():
         #경험치
         for expoint in exps:
             if expoint.death_check(player_x,player_y,p1.size)<0:
-                p1.exp_check(expoint.expp*10)
+                p1.exp_check(expoint.expp)
             expoint.draw()
         p1.draw()
         if cflag==False:
