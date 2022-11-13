@@ -1,6 +1,7 @@
 import pygame
 import random
 import time
+from itertools import permutations
 file = "survival" #이미지 파일이름
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480 # 스크린의 가로, 세로
@@ -14,21 +15,14 @@ clock=pygame.time.Clock() # 게임 내 시간 변수
 flag=True
 pflag=True
 wflag=True
+cflag=True
 mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
 wlist=[] # 임시 무기 리스트
 exps=[] # 경험치 리스트
-def pause():
-    paused = True
-    while paused:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_c:
-                    paused =False
-
+all_list=[] # 전체 선택창 리스트
+chlist=[] # 선택창 리스트
+ch_num=-100 # 선택창 번호
 class weapon:
     def __init__(self):
         self.size="무기 사이즈"
@@ -81,26 +75,23 @@ class boom(weapon):
 class eye(weapon):
     def __init__(self):
         self.size = 40
-        self.Time = 0.5
+        self.Time = 1
         self.str = 50
         self.throw = 3
-        self.speed = 10
+        self.speed = 7
         self.dx = 1  # x 벡터 방향
         self.dy = 0  # y 벡터 방향
         self.img = pygame.image.load(file + "/weapon_eye.png")
         self.loc = pygame.Rect(self.img.get_rect())
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
     def move_check(self,dx,dy):
-        print(dx,dy)
         self.dx=dx
         self.dy=dy
-
-
 
 class player:
     def __init__(self):
         #초기 설정값
-        self.size=40
+        self.size=50
         self.hp_size=50
         self.lv=1
         self.exp_pt=2
@@ -111,7 +102,7 @@ class player:
         self.speed = 3
         self.level=0
         self.exp=0
-        self.img = pygame.image.load(file+"/hero.png")
+        self.img = pygame.image.load(file+"/hero3.png")
         self.hp_img = pygame.image.load(file+"/hp.png")
         self.exp_img= pygame.image.load(file+"/exp bar2.png")
         self.loc = pygame.Rect(self.img.get_rect())
@@ -147,8 +138,6 @@ class player:
             cam_y+=self.speed
             self.dy=1
             self.dx=0
-        if key_event[pygame.K_p]:
-            pause()
     def draw(self):
         #그리는 함수
         self.hp_size=self.hp//2
@@ -156,11 +145,11 @@ class player:
             self.hp_size=0
         self.hp_img = pygame.transform.scale(self.hp_img, (self.hp_size, 10))
         screen.blit(self.img, (self.loc.x-cam_x,self.loc.y-cam_y))
-        screen.blit(self.hp_img, (self.loc.x-10-cam_x, self.loc.y - 20-cam_y))
+        screen.blit(self.hp_img, (self.loc.x-cam_x, self.loc.y - 20-cam_y))
         screen.blit(self.exp_img, (self.loc.x - 320 - cam_x, self.loc.y - 240 - cam_y))
     def death_check(self,x,y,str,size):
         #몬스터와 충돌하였는지 판별, x,y,srt,size= 몬스터의 값
-        if (abs(self.loc.x - x) <= size and abs(self.loc.y - y) <= size):
+        if (abs(self.loc.x - x) <= (size+self.size)/2 and abs(self.loc.y - y) <= (size+self.size)/2):
             self.hp-=str//10
     def exp_check(self,expp):
         self.exp_pt+=(expp/self.lv)
@@ -168,9 +157,74 @@ class player:
         if self.exp_max<=self.exp_pt:
             self.lv+=1
             self.exp_pt=2
+            pause()
         self.exp_size = (self.exp_pt) * (100 / self.exp_max)
         self.exp_img = pygame.transform.scale(self.exp_img, (self.exp_size * (6.5), 20))
+    def hp_plus(self):
+        self.hp=100
+class choice:
+    def __init__(self,num):
+        self.num=num
+        self.size=150
+        if num==0:
+            self.img=self.img = pygame.image.load(file+"/choice_1.png")
+        if num==1:
+            self.img=self.img = pygame.image.load(file+"/choice_2.png")
+        if num==2:
+            self.img=self.img = pygame.image.load(file+"/choice_3.png")
+        if num==3:
+            self.img=self.img = pygame.image.load(file+"/choice_4.png")
+        if num==4:
+            self.img=self.img = pygame.image.load(file+"/choice_5.png")
+        if num==5:
+            self.img=self.img = pygame.image.load(file+"/choice_6.png")
+        self.loc = pygame.Rect(self.img.get_rect())
+        self.img = pygame.transform.scale(self.img, (self.size, self.size+100))
+    def draw(self):
+        screen.blit(self.img, (self.loc.x, self.loc.y))
 
+
+def pause():
+    global cflag
+    global chlist
+    global all_list
+    global ch_num # 1,2,3 번 선택지 중 어떤 것을 골랐는지
+    chlist=[]
+    paused = True
+    rlist=[0,1,2,3,4,5]
+    rch=list(permutations(rlist, 3)) # 6개의 선택지중 3개를 뽑아 줄을 세움
+    rcount=random.choice(rch)
+    for i in range(3):
+        ch=all_list[rcount[i]]
+        if i==0:
+            ch.loc.x=50
+            ch.loc.y=100
+        if i==1:
+            ch.loc.x=250
+            ch.loc.y=100
+        if i==2:
+            ch.loc.x=450
+            ch.loc.y=100
+        chlist.append(ch)
+
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1 or event.key == pygame.K_2 or event.key == pygame.K_3:
+                    if event.key == pygame.K_1:
+                        ch_num=0
+                    if event.key == pygame.K_2:
+                        ch_num=1
+                    if event.key == pygame.K_3:
+                        ch_num=2
+                    cflag=False
+                    paused =False
+        for i in range(3):
+            chlist[i].draw()
+        pygame.display.update()
 class monster:
     def __init__(self):
         self.size= "몬스터 크기"
@@ -213,8 +267,6 @@ class monster:
             mobs.remove(self)
             return -1 # 몬스터 삭제됨
         return 0 #몬스터 삭제 되지 않음
-
-
 class zombie(monster):
     def __init__(self):
         self.size=50
@@ -226,6 +278,18 @@ class zombie(monster):
         self.img = pygame.image.load(file+'/zom2.png')
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.loc= pygame.Rect(self.img.get_rect())
+class boss(monster):
+    def __init__(self):
+        self.size=300
+        self.hp=10000
+        self.str=10
+        self.speed=100
+        self.dx=1
+        self.dy=1
+        self.img = pygame.image.load(file+'/boss.png')
+        self.img = pygame.transform.scale(self.img, (self.size, self.size))
+        self.loc= pygame.Rect(self.img.get_rect())
+
 class slenderman(monster):
     def __init__(self):
         self.size=50
@@ -271,20 +335,19 @@ def Rungame():
     global weapons
     global exps
     global wflag
+    global cflag
+    #모든 선택지 저장
+    for i in range(6):
+        ch=choice(i)
+        all_list.append(ch)
     # 게임 시작 시간
     game_time = int(time.time())
     p1=player()
-    for i in range(10):
-        boom1=boom()
-        boom1.loc.x=p1.loc.x
-        boom1.loc.y=p1.loc.y
-        eye1=eye()
-        eye1.loc.x=p1.loc.x
-        eye1.loc.y=p1.loc.y
-        boom1.start(int(time.time())-game_time)
-        eye1.start(int(time.time())-game_time)
-        weapons.append(boom1)
-        weapons.append(eye1)
+    eye1 = eye()
+    eye1.loc.x = p1.loc.x
+    eye1.loc.y = p1.loc.y
+    eye1.start(int(time.time()) - game_time)
+    weapons.append(eye1)
     while flag:
         remain_time= int(time.time())-game_time
         clock.tick(60)
@@ -298,17 +361,11 @@ def Rungame():
             mobs.append(zom)
             mobs.append(slen)
         if wflag==False:
-            for i in range(10):
-                boom1 = boom()
-                boom1.loc.x = p1.loc.x
-                boom1.loc.y = p1.loc.y
-                eye1 = eye()
-                eye1.loc.x = p1.loc.x
-                eye1.loc.y = p1.loc.y
-                boom1.start(int(time.time()) - game_time)
-                eye1.start(int(time.time()) - game_time)
-                weapons.append(boom1)
-                weapons.append(eye1)
+            eye1 = eye()
+            eye1.loc.x = p1.loc.x
+            eye1.loc.y = p1.loc.y
+            eye1.start(int(time.time()) - game_time)
+            weapons.append(eye1)
             wflag=True
             # 게임이 리셋되었을 때 임시방편 무기 소환 (수정 예정)
         for event in pygame.event.get():
@@ -316,7 +373,7 @@ def Rungame():
                 flag = False
         reset_key=pygame.key.get_pressed()
         # ESC 누르면 게임초기화
-        if reset_key[pygame.K_ESCAPE]:
+        if reset_key[pygame.K_ESCAPE] or p1.hp<=0:
             game_time = int(time.time())
             mobs=[]
             weapons=[]
@@ -359,9 +416,34 @@ def Rungame():
         #경험치
         for expoint in exps:
             if expoint.death_check(player_x,player_y,p1.size)<0:
-                p1.exp_check(expoint.expp)
+                p1.exp_check(expoint.expp*10)
             expoint.draw()
         p1.draw()
+        if cflag==False:
+        # 선택지에 따른 업데이트
+            if chlist[ch_num].num==0:
+                # 표창 하나 더 생성
+                boom1=boom()
+                boom1.start(int(time.time()) - game_time)
+                weapons.append(boom1)
+            if chlist[ch_num].num==1:
+                # 속도 증가
+                p1.speed+=5
+            if chlist[ch_num].num==2:
+                # hp 회복
+                p1.hp_plus()
+            if chlist[ch_num].num==3:
+                # 모든 무기 공격력 up
+                for weapon in weapons:
+                    weapon.str+=10
+            if chlist[ch_num].num==4:
+                # 주위 모든 몬스터 사망
+                mobs=[]
+            if chlist[ch_num].num==5:
+                for weapon in weapons:
+                    if type(weapon)=="<class '__main__.eye'>":
+                        weapon.speed+=10
+            cflag=True
         pygame.display.update()
 Rungame()
 pygame.quit()
