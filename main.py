@@ -183,6 +183,40 @@ class choice:
     def draw(self):
         screen.blit(self.img, (self.loc.x, self.loc.y))
 
+def start():
+    start= True
+    start_img=pygame.image.load(file+"/start.png")
+    start_img = pygame.transform.scale(start_img, (640,480))
+    while start:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    start=False
+            screen.blit(start_img,(0,0))
+            pygame.display.update()
+def gameover():
+    over= True
+    over_img = pygame.image.load(file + "/over.png")
+    over_img = pygame.transform.scale(over_img, (640, 480))
+    while over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    over=False
+                    return 1
+                elif event.key == pygame.K_ESCAPE:
+                    over=False
+                    return 0
+            screen.blit(over_img, (0, 0))
+            pygame.display.update()
+
+
 
 def pause():
     global cflag
@@ -373,15 +407,18 @@ def Rungame():
                 flag = False
         reset_key=pygame.key.get_pressed()
         # ESC 누르면 게임초기화
-        if reset_key[pygame.K_ESCAPE] or p1.hp<=0:
-            game_time = int(time.time())
-            mobs=[]
-            weapons=[]
-            exps=[]
-            p1=player()
-            cam_x=0
-            cam_y=0
-            wflag=False
+        if p1.hp<=0:
+            if gameover()==1:
+                game_time = int(time.time())
+                mobs = []
+                weapons = []
+                exps = []
+                p1 = player()
+                cam_x = 0
+                cam_y = 0
+                wflag = False
+            else:
+                pygame.quit()
         p1.move()
         # 플레이어 좌표값
         player_x=p1.loc.x
@@ -416,7 +453,7 @@ def Rungame():
         #경험치
         for expoint in exps:
             if expoint.death_check(player_x,player_y,p1.size)<0:
-                p1.exp_check(expoint.expp)
+                p1.exp_check(expoint.expp*5)
             expoint.draw()
         p1.draw()
         if cflag==False:
@@ -428,7 +465,7 @@ def Rungame():
                 weapons.append(boom1)
             if chlist[ch_num].num==1:
                 # 속도 증가
-                p1.speed+=5
+                p1.speed+=2
             if chlist[ch_num].num==2:
                 # hp 회복
                 p1.hp_plus()
@@ -445,5 +482,6 @@ def Rungame():
                         weapon.speed+=10
             cflag=True
         pygame.display.update()
+start()
 Rungame()
 pygame.quit()
