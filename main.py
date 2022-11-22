@@ -1,12 +1,14 @@
 import pygame
 import random
 import time
+import sys
 from itertools import permutations
+pygame.init()
 file = "survival" #이미지 파일이름
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480 # 스크린의 가로, 세로
 backcolor=(255,255,255)
-hpcolor = (255, 0, 0) # 색깔 RGB
+timecolor = (0, 0, 0) # 색깔 RGB
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) #화면 설정
 back_img=(pygame.transform.scale(pygame.image.load(file + '/map.png'), (10000, 10000)))
 cam_x=0
@@ -16,6 +18,8 @@ flag=True
 pflag=True
 wflag=True
 cflag=True
+overflag=0
+winflag=0
 mobs=[] # 몬스터 객체 리스트
 weapons=[] # 무기 객체 리스트
 wlist=[] # 임시 무기 리스트
@@ -23,6 +27,7 @@ exps=[] # 경험치 리스트
 all_list=[] # 전체 선택창 리스트
 chlist=[] # 선택창 리스트
 ch_num=-100 # 선택창 번호
+font = pygame.font.SysFont(None,60)
 class weapon:
     def __init__(self):
         self.size="무기 사이즈"
@@ -198,6 +203,7 @@ def start():
             screen.blit(start_img,(0,0))
             pygame.display.update()
 def gameover():
+    global overflag
     over= True
     over_img = pygame.image.load(file + "/over.png")
     over_img = pygame.transform.scale(over_img, (640, 480))
@@ -209,12 +215,32 @@ def gameover():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     over=False
-                    return 1
+                    overflag=1
                 elif event.key == pygame.K_ESCAPE:
                     over=False
-                    return 0
-            screen.blit(over_img, (0, 0))
-            pygame.display.update()
+                    overflag=-1
+        screen.blit(over_img, (0, 0))
+        pygame.display.update()
+def gamewin():
+    global winflag
+    win= True
+    win_img = pygame.image.load(file + "/win.png")
+    win_img = pygame.transform.scale(win_img, (640, 480))
+    while win:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    win=False
+                    winflag=1
+                elif event.key == pygame.K_ESCAPE:
+                    win=False
+                    winflag=-1
+        screen.blit(win_img, (0, 0))
+        pygame.display.update()
+
 
 
 
@@ -370,6 +396,9 @@ def Rungame():
     global exps
     global wflag
     global cflag
+    global overflag
+    global timecolor
+    global font
     #모든 선택지 저장
     for i in range(6):
         ch=choice(i)
@@ -406,9 +435,24 @@ def Rungame():
             if event.type == pygame.QUIT:
                 flag = False
         reset_key=pygame.key.get_pressed()
-        # ESC 누르면 게임초기화
+        #게임 승리
+        if remain_time>=600:
+            gamewin()
+            if winflag==1:
+                game_time = int(time.time())
+                mobs = []
+                weapons = []
+                exps = []
+                p1 = player()
+                cam_x = 0
+                cam_y = 0
+                wflag = False
+            else:
+                pygame.quit()
+        # 게임 오버
         if p1.hp<=0:
-            if gameover()==1:
+            gameover()
+            if overflag==1:
                 game_time = int(time.time())
                 mobs = []
                 weapons = []
